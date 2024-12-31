@@ -6,10 +6,7 @@ import source.code.wizard.sbdecoratorpattern.decorator.TripInfoDTO;
 import source.code.wizard.sbdecoratorpattern.decorator.enums.TripDecoratorType;
 import source.code.wizard.sbdecoratorpattern.decorator.types.TripServiceDecoratorBase;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 @Service
 public class TripExpensesCalcServiceImpl implements TripExpensesCalcService {
@@ -28,19 +25,25 @@ public class TripExpensesCalcServiceImpl implements TripExpensesCalcService {
 
         final ArrayList<TripDecoratorType> decoratorTypesArray = new ArrayList<>(decoratorTypesSet);
 
-        TripServiceDecoratorBase tripServiceDecorator = null;
-        for (int decoratorTypeIndex = 0; decoratorTypeIndex < decoratorTypesArray.size(); decoratorTypeIndex++) {
-            tripServiceDecorator = decoratorsMap.get(decoratorTypesArray.get(decoratorTypeIndex));
-            if (decoratorTypeIndex == 0) {
-                tripServiceDecorator.setTripService(standardTripService);
-            } else {
-                TripServiceDecoratorBase previousTripServiceDecorator = decoratorsMap.get(decoratorTypesArray.get(decoratorTypeIndex - 1));
-                tripServiceDecorator.setTripService(previousTripServiceDecorator);
-            }
-        }
+        final TripServiceDecoratorBase tripServiceDecorator = buildDecoratorChain(decoratorTypesArray);
+
         if (tripServiceDecorator != null)
             return new TripInfoDTO(tripServiceDecorator.getPrice(), tripServiceDecorator.getDescription());
         else
             return new TripInfoDTO(0.0, " ");
+    }
+
+    private TripServiceDecoratorBase buildDecoratorChain(final List<TripDecoratorType> decoratorTypes) {
+        TripServiceDecoratorBase tripServiceDecorator = null;
+        for (int decoratorTypeIndex = 0; decoratorTypeIndex < decoratorTypes.size(); decoratorTypeIndex++) {
+            tripServiceDecorator = decoratorsMap.get(decoratorTypes.get(decoratorTypeIndex));
+            if (decoratorTypeIndex == 0) {
+                tripServiceDecorator.setTripService(standardTripService);
+            } else {
+                TripServiceDecoratorBase previousTripServiceDecorator = decoratorsMap.get(decoratorTypes.get(decoratorTypeIndex - 1));
+                tripServiceDecorator.setTripService(previousTripServiceDecorator);
+            }
+        }
+        return tripServiceDecorator;
     }
 }
